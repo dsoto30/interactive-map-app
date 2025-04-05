@@ -14,7 +14,7 @@ import {
     Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { Link, useRouter } from "expo-router";
+import { Link, useRouter, Stack } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
@@ -34,75 +34,82 @@ export default function LoginScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
-            >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <StatusBar style="auto" />
+        <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <SafeAreaView style={styles.container}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardView}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <StatusBar style="auto" />
 
-                    <View style={styles.logoContainer}>
-                        <Text style={styles.logoText}>MyApp</Text>
-                    </View>
-
-                    <View style={styles.formContainer}>
-                        <Text style={styles.title}>Welcome Back</Text>
-                        <Text style={styles.subtitle}>Sign in to continue</Text>
-
-                        {error ? (
-                            <Text style={styles.errorText}>{error}</Text>
-                        ) : null}
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Email"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            editable={!isLoading}
-                        />
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            editable={!isLoading}
-                        />
-
-                        <TouchableOpacity
-                            style={[
-                                styles.button,
-                                isLoading ? styles.buttonDisabled : null,
-                            ]}
-                            onPress={handleLogin}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={styles.buttonText}>Sign In</Text>
-                            )}
-                        </TouchableOpacity>
-
-                        <View style={styles.linkContainer}>
-                            <Text style={styles.linkText}>
-                                Don't have an account?{" "}
-                            </Text>
-                            <Link href="/register" asChild>
-                                <TouchableOpacity>
-                                    <Text style={styles.link}>Sign Up</Text>
-                                </TouchableOpacity>
-                            </Link>
+                        <View style={styles.logoContainer}>
+                            <Text style={styles.logoText}>Map Event</Text>
                         </View>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+
+                        <View style={styles.formContainer}>
+                            <Text style={styles.title}>Welcome!</Text>
+                            <Text style={styles.subtitle}>
+                                Sign in to continue
+                            </Text>
+
+                            {error ? (
+                                <Text style={styles.errorText}>{error}</Text>
+                            ) : null}
+
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Email"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                editable={!isLoading}
+                            />
+
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Password"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                editable={!isLoading}
+                            />
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.button,
+                                    isLoading ? styles.buttonDisabled : null,
+                                ]}
+                                onPress={handleLogin}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.buttonText}>
+                                        Sign In
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+
+                            <View style={styles.linkContainer}>
+                                <Text style={styles.linkText}>
+                                    Don't have an account?{" "}
+                                </Text>
+                                <Link href="/register" asChild>
+                                    <TouchableOpacity>
+                                        <Text style={styles.link}>Sign Up</Text>
+                                    </TouchableOpacity>
+                                </Link>
+                            </View>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </>
     );
 }
 

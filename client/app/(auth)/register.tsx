@@ -13,7 +13,7 @@ import {
     SafeAreaView,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { Link, useRouter } from "expo-router";
+import { Link, useRouter, Stack } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegisterScreen() {
@@ -68,126 +68,135 @@ export default function RegisterScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.keyboardView}
-            >
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
+        <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <SafeAreaView style={styles.container}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardView}
                 >
-                    <StatusBar style="auto" />
+                    <ScrollView
+                        contentContainerStyle={styles.scrollContent}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <StatusBar style="auto" />
 
-                    <View style={styles.headerContainer}>
-                        <Text style={styles.headerTitle}>Create Account</Text>
-                        <Text style={styles.headerSubtitle}>
-                            Sign up to get started
-                        </Text>
-                    </View>
-
-                    <View style={styles.formContainer}>
-                        {/* Show validation errors or server errors */}
-                        {validationError ? (
-                            <View style={styles.errorContainer}>
-                                <Text style={styles.errorText}>
-                                    {validationError}
-                                </Text>
-                            </View>
-                        ) : error ? (
-                            <View style={styles.errorContainer}>
-                                <Text style={styles.errorText}>{error}</Text>
-                            </View>
-                        ) : null}
-
-                        {/* Email field */}
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Email</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Your email address"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                editable={!isLoading}
-                            />
-                        </View>
-
-                        {/* Password field */}
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>Password</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Create a password"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                editable={!isLoading}
-                            />
-                        </View>
-
-                        {/* Confirm password field */}
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>
-                                Confirm Password
+                        <View style={styles.headerContainer}>
+                            <Text style={styles.headerTitle}>
+                                Create Account
                             </Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Confirm your password"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry
-                                editable={!isLoading}
-                            />
-                        </View>
-
-                        {/* Register button */}
-                        <TouchableOpacity
-                            style={[
-                                styles.button,
-                                isLoading ? styles.buttonDisabled : null,
-                            ]}
-                            onPress={handleRegister}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={styles.buttonText}>
-                                    Create Account
-                                </Text>
-                            )}
-                        </TouchableOpacity>
-
-                        {/* Login link */}
-                        <View style={styles.linkContainer}>
-                            <Text style={styles.linkText}>
-                                Already have an account?{" "}
+                            <Text style={styles.headerSubtitle}>
+                                Sign up to get started
                             </Text>
-                            <Link href="/login" asChild>
-                                <TouchableOpacity>
-                                    <Text style={styles.link}>Sign In</Text>
-                                </TouchableOpacity>
-                            </Link>
                         </View>
-                    </View>
 
-                    {/* Terms and privacy text */}
-                    <View style={styles.termsContainer}>
-                        <Text style={styles.termsText}>
-                            By creating an account, you agree to our{" "}
-                            <Text style={styles.termsLink}>
-                                Terms of Service
-                            </Text>{" "}
-                            and{" "}
-                            <Text style={styles.termsLink}>Privacy Policy</Text>
-                        </Text>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                        <View style={styles.formContainer}>
+                            {/* Show validation errors or server errors */}
+                            {validationError ? (
+                                <View style={styles.errorContainer}>
+                                    <Text style={styles.errorText}>
+                                        {validationError}
+                                    </Text>
+                                </View>
+                            ) : error ? (
+                                <View style={styles.errorContainer}>
+                                    <Text style={styles.errorText}>
+                                        {error}
+                                    </Text>
+                                </View>
+                            ) : null}
+
+                            {/* Email field */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Email</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Your email address"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    editable={!isLoading}
+                                />
+                            </View>
+
+                            {/* Password field */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Password</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Create a password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry
+                                    editable={!isLoading}
+                                />
+                            </View>
+
+                            {/* Confirm password field */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>
+                                    Confirm Password
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Confirm your password"
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry
+                                    editable={!isLoading}
+                                />
+                            </View>
+
+                            {/* Register button */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.button,
+                                    isLoading ? styles.buttonDisabled : null,
+                                ]}
+                                onPress={handleRegister}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.buttonText}>
+                                        Create Account
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+
+                            {/* Login link */}
+                            <View style={styles.linkContainer}>
+                                <Text style={styles.linkText}>
+                                    Already have an account?{" "}
+                                </Text>
+                                <Link href="/login" asChild>
+                                    <TouchableOpacity>
+                                        <Text style={styles.link}>Sign In</Text>
+                                    </TouchableOpacity>
+                                </Link>
+                            </View>
+                        </View>
+
+                        {/* Terms and privacy text */}
+                        <View style={styles.termsContainer}>
+                            <Text style={styles.termsText}>
+                                By creating an account, you agree to our{" "}
+                                <Text style={styles.termsLink}>
+                                    Terms of Service
+                                </Text>{" "}
+                                and{" "}
+                                <Text style={styles.termsLink}>
+                                    Privacy Policy
+                                </Text>
+                            </Text>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </>
     );
 }
 

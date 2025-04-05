@@ -3,6 +3,7 @@ import {
     getAuth,
     initializeAuth,
     getReactNativePersistence,
+    Auth,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
@@ -18,7 +19,6 @@ if (Platform.OS === "web") {
         `Unsupported platform: ${Platform.OS}. Please ensure your platform is supported.`
     );
 }
-console.log(process.env.EXPO_PUBLIC_FIREBASE_API_KEY);
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? "",
     authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
@@ -31,7 +31,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-let auth;
+let auth: Auth;
 if (Platform.OS === "web") {
     auth = getAuth(app); // ✅ For web
 } else {
