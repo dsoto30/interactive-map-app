@@ -1,5 +1,5 @@
 // app/(auth)/login.tsx
-import React, { useState } from "react";
+import React from "react";
 import {
     View,
     TextInput,
@@ -11,26 +11,41 @@ import {
     Platform,
     ScrollView,
     SafeAreaView,
-    Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter, Stack } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+    email: z.string().email("Invalid email format!"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type FormTypes = z.infer<typeof schema>;
 
 export default function LoginScreen() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const { login, isLoading, error } = useAuth();
     const router = useRouter();
 
-    const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert("Error", "Please fill in all fields");
-            return;
-        }
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormTypes>({
+        resolver: zodResolver(schema),
+        defaultValues: { email: "", password: "" },
+    });
 
-        await login(email, password);
-        router.replace("/");
+    const onSubmit: SubmitHandler<FormTypes> = async (data) => {
+        try {
+            await login(data.email, data.password);
+            router.replace("/");
+        } catch (err) {
+            // Error is already handled in the useAuth context
+        }
     };
 
     return (
@@ -54,28 +69,70 @@ export default function LoginScreen() {
                                 Sign in to continue
                             </Text>
 
-                            {error ? (
+                            {error && (
                                 <Text style={styles.errorText}>{error}</Text>
-                            ) : null}
+                            )}
 
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Email"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                editable={!isLoading}
+                            <Controller
+                                control={control}
+                                name="email"
+                                render={({
+                                    field: { onChange, onBlur, value },
+                                }) => (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.input,
+                                                errors.email
+                                                    ? styles.inputError
+                                                    : null,
+                                            ]}
+                                            placeholder="Email"
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            value={value}
+                                            editable={!isLoading}
+                                        />
+                                        {errors.email && (
+                                            <Text style={styles.errorText}>
+                                                {errors.email.message}
+                                            </Text>
+                                        )}
+                                    </>
+                                )}
                             />
 
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Password"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                editable={!isLoading}
+                            <Controller
+                                control={control}
+                                name="password"
+                                render={({
+                                    field: { onChange, onBlur, value },
+                                }) => (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.input,
+                                                errors.password
+                                                    ? styles.inputError
+                                                    : null,
+                                            ]}
+                                            placeholder="Password"
+                                            secureTextEntry
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            value={value}
+                                            editable={!isLoading}
+                                        />
+                                        {errors.password && (
+                                            <Text style={styles.errorText}>
+                                                {errors.password.message}
+                                            </Text>
+                                        )}
+                                    </>
+                                )}
                             />
 
                             <TouchableOpacity
@@ -83,11 +140,14 @@ export default function LoginScreen() {
                                     styles.button,
                                     isLoading ? styles.buttonDisabled : null,
                                 ]}
-                                onPress={handleLogin}
+                                onPress={handleSubmit(onSubmit)}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <ActivityIndicator color="#fff" />
+                                    <ActivityIndicator
+                                        color="#fff"
+                                        size="small"
+                                    />
                                 ) : (
                                     <Text style={styles.buttonText}>
                                         Sign In
@@ -100,7 +160,7 @@ export default function LoginScreen() {
                                     Don't have an account?{" "}
                                 </Text>
                                 <Link href="/register" asChild>
-                                    <TouchableOpacity>
+                                    <TouchableOpacity disabled={isLoading}>
                                         <Text style={styles.link}>Sign Up</Text>
                                     </TouchableOpacity>
                                 </Link>
@@ -165,9 +225,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#ddd",
         borderRadius: 8,
-        marginBottom: 16,
+        marginBottom: 8,
         paddingHorizontal: 12,
         backgroundColor: "#f9f9f9",
+    },
+    inputError: {
+        borderColor: "#ff3b30",
     },
     button: {
         backgroundColor: "#007bff",
@@ -175,7 +238,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 8,
+        marginTop: 16,
     },
     buttonDisabled: {
         backgroundColor: "#8eb8ee",
@@ -208,7 +271,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         color: "#ff3b30",
-        marginBottom: 16,
-        textAlign: "center",
+        fontSize: 12,
+        marginBottom: 10,
     },
 });
