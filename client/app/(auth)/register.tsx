@@ -1,5 +1,5 @@
 // app/(auth)/register.tsx
-import React, { useState } from "react";
+import React from "react";
 import {
     View,
     TextInput,
@@ -15,56 +15,49 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Link, useRouter, Stack } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z
+    .object({
+        email: z.string().email("Must be valid email."),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+        confirmPassword: z.string().min(8),
+    })
+    .superRefine(({ password, confirmPassword }, ctx) => {
+        if (password !== confirmPassword) {
+            ctx.addIssue({
+                code: "custom",
+                message: "Passwords do not match",
+                path: ["confirmPassword"],
+            });
+        }
+    });
+
+type FormTypes = z.infer<typeof schema>;
 
 export default function RegisterScreen() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [validationError, setValidationError] = useState("");
     const { register, isLoading, error } = useAuth();
     const router = useRouter();
 
-    const validateInputs = () => {
-        // Reset any previous validation errors
-        setValidationError("");
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormTypes>({
+        resolver: zodResolver(schema),
+        defaultValues: { email: "", password: "", confirmPassword: "" },
+    });
 
-        // Check for empty fields
-        if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-            setValidationError("Please fill in all fields");
-            return false;
-        }
-
-        // Email validation using regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setValidationError("Please enter a valid email address");
-            return false;
-        }
-
-        // Check password length
-        if (password.length < 6) {
-            setValidationError("Password must be at least 6 characters");
-            return false;
-        }
-
-        // Check if passwords match
-        if (password !== confirmPassword) {
-            setValidationError("Passwords do not match");
-            return false;
-        }
-
-        return true;
-    };
-
-    const handleRegister = async () => {
-        if (!validateInputs()) {
-            return;
-        }
-
+    const onSubmit: SubmitHandler<FormTypes> = async (data) => {
         // Submit registration
-        await register(email, password);
-
-        router.replace("/");
+        try {
+            await register(data.email, data.password);
+            router.replace("/");
+        } catch (error) {
+            // Error is handled in the useAuth context
+        }
     };
 
     return (
@@ -81,73 +74,115 @@ export default function RegisterScreen() {
                     >
                         <StatusBar style="auto" />
 
-                        <View style={styles.headerContainer}>
-                            <Text style={styles.headerTitle}>
-                                Create Account
-                            </Text>
-                            <Text style={styles.headerSubtitle}>
-                                Sign up to get started
-                            </Text>
+                        <View style={styles.logoContainer}>
+                            <Text style={styles.logoText}>Map Event</Text>
                         </View>
 
                         <View style={styles.formContainer}>
+                            <Text style={styles.title}>Create Account</Text>
+                            <Text style={styles.subtitle}>
+                                Sign up to get started
+                            </Text>
+
                             {/* Show validation errors or server errors */}
-                            {validationError ? (
-                                <View style={styles.errorContainer}>
-                                    <Text style={styles.errorText}>
-                                        {validationError}
-                                    </Text>
-                                </View>
-                            ) : error ? (
-                                <View style={styles.errorContainer}>
-                                    <Text style={styles.errorText}>
-                                        {error}
-                                    </Text>
-                                </View>
-                            ) : null}
+                            {error && (
+                                <Text style={styles.errorText}>{error}</Text>
+                            )}
 
                             {/* Email field */}
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Email</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Your email address"
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    autoCorrect={false}
-                                    editable={!isLoading}
-                                />
-                            </View>
+                            <Controller
+                                control={control}
+                                name="email"
+                                render={({
+                                    field: { onChange, onBlur, value },
+                                }) => (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.input,
+                                                errors.email
+                                                    ? styles.inputError
+                                                    : null,
+                                            ]}
+                                            placeholder="Email"
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            value={value}
+                                            editable={!isLoading}
+                                        />
+                                        {errors.email && (
+                                            <Text style={styles.errorText}>
+                                                {errors.email.message}
+                                            </Text>
+                                        )}
+                                    </>
+                                )}
+                            />
 
                             {/* Password field */}
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Password</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Create a password"
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry
-                                    editable={!isLoading}
-                                />
-                            </View>
+                            <Controller
+                                control={control}
+                                name="password"
+                                render={({
+                                    field: { onChange, onBlur, value },
+                                }) => (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.input,
+                                                errors.password
+                                                    ? styles.inputError
+                                                    : null,
+                                            ]}
+                                            placeholder="Password"
+                                            secureTextEntry
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            value={value}
+                                            editable={!isLoading}
+                                        />
+                                        {errors.password && (
+                                            <Text style={styles.errorText}>
+                                                {errors.password.message}
+                                            </Text>
+                                        )}
+                                    </>
+                                )}
+                            />
 
                             {/* Confirm password field */}
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>
-                                    Confirm Password
-                                </Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Confirm your password"
-                                    value={confirmPassword}
-                                    onChangeText={setConfirmPassword}
-                                    secureTextEntry
-                                    editable={!isLoading}
-                                />
-                            </View>
+                            <Controller
+                                control={control}
+                                name="confirmPassword"
+                                render={({
+                                    field: { onChange, onBlur, value },
+                                }) => (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.input,
+                                                errors.confirmPassword
+                                                    ? styles.inputError
+                                                    : null,
+                                            ]}
+                                            placeholder="Confirm Password"
+                                            secureTextEntry
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            value={value}
+                                            editable={!isLoading}
+                                        />
+                                        {errors.confirmPassword && (
+                                            <Text style={styles.errorText}>
+                                                {errors.confirmPassword.message}
+                                            </Text>
+                                        )}
+                                    </>
+                                )}
+                            />
 
                             {/* Register button */}
                             <TouchableOpacity
@@ -155,11 +190,14 @@ export default function RegisterScreen() {
                                     styles.button,
                                     isLoading ? styles.buttonDisabled : null,
                                 ]}
-                                onPress={handleRegister}
+                                onPress={handleSubmit(onSubmit)}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <ActivityIndicator color="#fff" />
+                                    <ActivityIndicator
+                                        color="#fff"
+                                        size="small"
+                                    />
                                 ) : (
                                     <Text style={styles.buttonText}>
                                         Create Account
@@ -173,7 +211,7 @@ export default function RegisterScreen() {
                                     Already have an account?{" "}
                                 </Text>
                                 <Link href="/login" asChild>
-                                    <TouchableOpacity>
+                                    <TouchableOpacity disabled={isLoading}>
                                         <Text style={styles.link}>Sign In</Text>
                                     </TouchableOpacity>
                                 </Link>
@@ -203,82 +241,72 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f8f9fa",
+        backgroundColor: "#f5f5f5",
     },
     keyboardView: {
         flex: 1,
     },
     scrollContent: {
         flexGrow: 1,
-        paddingHorizontal: 24,
-        paddingTop: 40,
-        paddingBottom: 24,
+        justifyContent: "center",
+        padding: 20,
     },
-    headerContainer: {
-        marginBottom: 32,
+    logoContainer: {
+        alignItems: "center",
+        marginBottom: 40,
     },
-    headerTitle: {
-        fontSize: 28,
+    logoText: {
+        fontSize: 32,
         fontWeight: "bold",
-        color: "#1a1a1a",
-        marginBottom: 8,
-    },
-    headerSubtitle: {
-        fontSize: 16,
-        color: "#6c757d",
+        color: "#007bff",
     },
     formContainer: {
-        backgroundColor: "#ffffff",
-        borderRadius: 12,
-        padding: 24,
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 20,
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.05,
-        shadowRadius: 15,
-        elevation: 2,
-        marginBottom: 24,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    errorContainer: {
-        backgroundColor: "#ffebee",
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-    },
-    errorText: {
-        color: "#d32f2f",
-        fontSize: 14,
-    },
-    inputContainer: {
-        marginBottom: 16,
-    },
-    inputLabel: {
-        fontSize: 14,
-        fontWeight: "500",
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
         marginBottom: 8,
-        color: "#495057",
+        textAlign: "center",
+    },
+    subtitle: {
+        fontSize: 16,
+        color: "#666",
+        marginBottom: 24,
+        textAlign: "center",
     },
     input: {
-        height: 52,
+        height: 50,
         borderWidth: 1,
-        borderColor: "#ced4da",
+        borderColor: "#ddd",
         borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        backgroundColor: "#fff",
+        marginBottom: 8,
+        paddingHorizontal: 12,
+        backgroundColor: "#f9f9f9",
+    },
+    inputError: {
+        borderColor: "#ff3b30",
     },
     button: {
         backgroundColor: "#007bff",
-        height: 52,
+        height: 50,
         borderRadius: 8,
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 8,
+        marginTop: 16,
     },
     buttonDisabled: {
-        backgroundColor: "#b3d7ff",
+        backgroundColor: "#8eb8ee",
     },
     buttonText: {
         color: "#fff",
@@ -288,24 +316,27 @@ const styles = StyleSheet.create({
     linkContainer: {
         flexDirection: "row",
         justifyContent: "center",
-        marginTop: 24,
+        marginTop: 20,
     },
     linkText: {
-        color: "#6c757d",
-        fontSize: 15,
+        color: "#666",
     },
     link: {
         color: "#007bff",
         fontWeight: "600",
-        fontSize: 15,
+    },
+    errorText: {
+        color: "#ff3b30",
+        fontSize: 12,
+        marginBottom: 10,
     },
     termsContainer: {
-        marginTop: 8,
-        alignItems: "center",
+        marginTop: 20,
+        padding: 10,
     },
     termsText: {
         fontSize: 12,
-        color: "#6c757d",
+        color: "#666",
         textAlign: "center",
         lineHeight: 18,
     },
